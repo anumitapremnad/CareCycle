@@ -1,0 +1,118 @@
+/* CareCycle — Base Design Tokens & Global Resets */
+:root {
+  /* Brand Palettes */
+  --color-forest-950: #0a1b14;
+  --color-forest-900: #122b20;
+  --color-forest-800: #1b4332;
+  --color-forest-700: #2d6a4f;
+  --color-forest-600: #40916c;
+  --color-forest-100: #d8f3dc;
+  --color-forest-50: #edfbf2;
+
+  --color-mint-600: #059669;
+  --color-mint-500: #10b981;
+  --color-mint-400: #34d399;
+  --color-mint-100: #d1fae5;
+  --color-mint-50: #ecfdf5;
+  --color-mint-text: #065f46;
+
+  --color-peach-600: #c25e43;
+  --color-peach-500: #e07a5f;
+  --color-peach-400: #f4a261;
+  --color-peach-200: #fed7aa;
+  --color-peach-100: #ffedd5;
+  --color-peach-50: #fff7ed;
+  --color-peach-text: #9a3412;
+
+  --color-ivory-bg: #faf8f5;
+  --color-ivory-card: #ffffff;
+  --color-ivory-subtle: #f5f2eb;
+  --color-ivory-border: #eae6dc;
+
+  --color-slate-900: #131d18;
+  --color-slate-800: #1f2d25;
+  --color-slate-700: #33443a;
+  --color-slate-600: #4b5d52;
+  --color-slate-500: #68796f;
+  --color-slate-400: #93a299;
+  --color-slate-300: #cbd5ce;
+  --color-slate-200: #e2e8e3;
+  --color-slate-100: #f0f4f1;
+  --color-white: #ffffff;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Elevation Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(19, 45, 32, 0.04);
+  --shadow-md: 0 4px 12px -2px rgba(19, 45, 32, 0.06), 0 2px 6px -1px rgba(19, 45, 32, 0.03);
+  --shadow-lg: 0 10px 24px -4px rgba(19, 45, 32, 0.08), 0 6px 12px -3px rgba(19, 45, 32, 0.04);
+  --shadow-xl: 0 20px 32px -8px rgba(19, 45, 32, 0.12), 0 8px 16px -4px rgba(19, 45, 32, 0.06);
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-ivory-bg);
+  color: var(--color-slate-800);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Accessibility focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-forest-700);
+  outline-offset: 2px;
+}
