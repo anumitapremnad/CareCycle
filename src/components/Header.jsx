@@ -1,6 +1,21 @@
 import { Menu, HeartHandshake, PackagePlus } from 'lucide-react';
 
-export default function Header({ onToggleMobileMenu, onOpenAddModal }) {
+export default function Header({
+  onToggleMobileMenu,
+  onOpenAddModal,
+  currentRole,
+}) {
+  const getRoleLabel = () => {
+    switch (currentRole) {
+      case 'coordinator':
+        return 'Coordinator';
+      case 'admin':
+        return 'Admin';
+      default:
+        return 'Community';
+    }
+  };
+
   return (
     <header className="app-mobile-header">
       <div className="mobile-header-left">
@@ -22,6 +37,9 @@ export default function Header({ onToggleMobileMenu, onOpenAddModal }) {
       </div>
 
       <div className="mobile-header-right">
+        <span className="mobile-role-pill">
+          {getRoleLabel()}
+        </span>
         <button
           type="button"
           className="btn btn--primary btn--compact"

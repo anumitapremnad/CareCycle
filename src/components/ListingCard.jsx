@@ -7,9 +7,18 @@ import {
   Clock,
   RotateCcw,
   Sparkles,
+  Building2,
+  AlertTriangle,
+  Eye,
 } from 'lucide-react';
+import TrustBadge from './TrustBadge';
 
-export default function ListingCard({ listing, onRequestToggle }) {
+export default function ListingCard({
+  listing,
+  hub,
+  onRequestToggle,
+  onOpenDetail,
+}) {
   const isAvailable = listing.status === 'Available';
 
   const formatExpiry = (expiry, isDurable) => {
@@ -19,7 +28,6 @@ export default function ListingCard({ listing, onRequestToggle }) {
     if (!expiry) {
       return 'Expiry date not specified';
     }
-    // Attempt friendly date formatting if YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}$/.test(expiry)) {
       try {
         const [year, month, day] = expiry.split('-');
@@ -36,11 +44,28 @@ export default function ListingCard({ listing, onRequestToggle }) {
     return expiry;
   };
 
+  // Check if expiring soon (< 45 days)
+  const isExpiringSoon = (() => {
+    if (listing.isDurable || !listing.expiry || !/^\d{4}-\d{2}-\d{2}$/.test(listing.expiry)) {
+      return false;
+    }
+    const expiryDate = new Date(listing.expiry);
+    const today = new Date();
+    const diffTime = expiryDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 && diffDays <= 45;
+  })();
+
   return (
     <article className={`listing-card listing-card--${isAvailable ? 'available' : 'requested'}`}>
       <div className="listing-card__header">
         <div className="listing-card__category-wrap">
           <span className="listing-card__category">{listing.category}</span>
+          {isExpiringSoon && (
+            <span className="expiring-pill" title="Expires within 45 days">
+              <AlertTriangle size={11} /> Soon
+            </span>
+          )}
         </div>
         <span
           className={`listing-card__status-badge ${
@@ -62,7 +87,13 @@ export default function ListingCard({ listing, onRequestToggle }) {
       </div>
 
       <div className="listing-card__body">
-        <h4 className="listing-card__title">{listing.name}</h4>
+        <h4
+          className="listing-card__title listing-card__title--clickable"
+          onClick={() => onOpenDetail(listing)}
+          title="Click to view complete details"
+        >
+          {listing.name}
+        </h4>
 
         <div className="listing-card__meta-list">
           <div className="listing-meta-row">
@@ -72,14 +103,20 @@ export default function ListingCard({ listing, onRequestToggle }) {
           </div>
 
           <div className="listing-meta-row">
+            <Building2 size={15} className="listing-meta-icon" />
+            <span className="listing-meta-label">Hub:</span>
+            <span className="listing-meta-val">{listing.hubName || 'Independent Drop'}</span>
+          </div>
+
+          <div className="listing-meta-row">
             <MapPin size={15} className="listing-meta-icon" />
-            <span className="listing-meta-label">Pickup Hub:</span>
+            <span className="listing-meta-label">Location:</span>
             <span className="listing-meta-val">{listing.location}</span>
           </div>
 
           <div className="listing-meta-row">
             <Calendar size={15} className="listing-meta-icon" />
-            <span className="listing-meta-label">Expiry / Shelf-Life:</span>
+            <span className="listing-meta-label">Shelf Life:</span>
             <span
               className={`listing-meta-val ${
                 listing.isDurable ? 'listing-meta-val--durable' : ''
@@ -89,6 +126,12 @@ export default function ListingCard({ listing, onRequestToggle }) {
             </span>
           </div>
         </div>
+
+        {hub && (
+          <div className="listing-card__hub-trust">
+            <TrustBadge status={hub.trustStatus} />
+          </div>
+        )}
 
         {listing.donorNotes && (
           <div className="listing-card__notes">
@@ -102,10 +145,15 @@ export default function ListingCard({ listing, onRequestToggle }) {
       </div>
 
       <div className="listing-card__footer">
-        <div className="listing-card__donor-meta">
-          <span className="donor-label">Contributed by:</span>
-          <span className="donor-name">{listing.donorName || 'Community Neighbor'}</span>
-        </div>
+        <button
+          type="button"
+          className="btn-card-detail"
+          onClick={() => onOpenDetail(listing)}
+          aria-label={`View details for ${listing.name}`}
+        >
+          <Eye size={14} />
+          <span>Inspect</span>
+        </button>
 
         <div className="listing-card__actions">
           {isAvailable ? (
@@ -116,7 +164,7 @@ export default function ListingCard({ listing, onRequestToggle }) {
               aria-label={`Request ${listing.name}`}
             >
               <HeartHandshake size={16} />
-              <span>Request Supply</span>
+              <span>Request</span>
             </button>
           ) : (
             <div className="requested-action-group">
@@ -131,7 +179,7 @@ export default function ListingCard({ listing, onRequestToggle }) {
                 aria-label={`Cancel request for ${listing.name}`}
               >
                 <RotateCcw size={14} />
-                <span>Return to Shelf</span>
+                <span>Return</span>
               </button>
             </div>
           )}

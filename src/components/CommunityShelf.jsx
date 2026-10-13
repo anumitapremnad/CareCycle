@@ -1,20 +1,34 @@
 import { useState, useMemo } from 'react';
-import { Search, Filter, X, PackagePlus, AlertCircle, Sparkles } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  X,
+  PackagePlus,
+  AlertCircle,
+  Sparkles,
+  ArrowUpDown,
+  Building2,
+} from 'lucide-react';
 import ListingCard from './ListingCard';
-import { CATEGORIES } from '../data/mockListings';
+import { CATEGORIES } from '../data/mockData';
 
 export default function CommunityShelf({
   listings,
+  hubs,
   onRequestToggle,
   onOpenAddModal,
+  onOpenDetail,
+  activeHubFilter,
+  onSetActiveHubFilter,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Available' | 'Requested'
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'expiry' | 'name'
 
-  // Filter listings based on search term, status, and category
+  // Filter listings based on search term, status, category, and selected hub
   const filteredListings = useMemo(() => {
-    return listings.filter((item) => {
+    let result = listings.filter((item) => {
       // Status filter
       if (statusFilter !== 'All' && item.status !== statusFilter) {
         return false;
@@ -25,36 +39,71 @@ export default function CommunityShelf({
         return false;
       }
 
-      // Search term matching name, category, or location
+      // Hub filter
+      if (activeHubFilter && activeHubFilter !== 'All' && item.hubId !== activeHubFilter) {
+        return false;
+      }
+
+      // Search term matching name, category, location, hubName, or notes
       if (searchTerm.trim() !== '') {
         const query = searchTerm.toLowerCase();
         const matchesName = item.name.toLowerCase().includes(query);
         const matchesCategory = item.category.toLowerCase().includes(query);
         const matchesLocation = item.location.toLowerCase().includes(query);
+        const matchesHub = item.hubName?.toLowerCase().includes(query) || false;
         const matchesNotes = item.donorNotes?.toLowerCase().includes(query) || false;
 
-        if (!matchesName && !matchesCategory && !matchesLocation && !matchesNotes) {
+        if (!matchesName && !matchesCategory && !matchesLocation && !matchesHub && !matchesNotes) {
           return false;
         }
       }
 
       return true;
     });
-  }, [listings, statusFilter, categoryFilter, searchTerm]);
+
+    // Sorting
+    return result.sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.dateAdded || 0) - new Date(a.dateAdded || 0);
+      }
+      if (sortBy === 'oldest') {
+        return new Date(a.dateAdded || 0) - new Date(b.dateAdded || 0);
+      }
+      if (sortBy === 'expiry') {
+        // Items with dates first, durable items last
+        if (a.isDurable && !b.isDurable) return 1;
+        if (!a.isDurable && b.isDurable) return -1;
+        return (a.expiry || '').localeCompare(b.expiry || '');
+      }
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      }
+      return 0;
+    });
+  }, [listings, statusFilter, categoryFilter, activeHubFilter, searchTerm, sortBy]);
 
   const hasActiveFilters =
     searchTerm.trim() !== '' ||
     statusFilter !== 'All' ||
-    categoryFilter !== 'All Categories';
+    categoryFilter !== 'All Categories' ||
+    (activeHubFilter && activeHubFilter !== 'All');
 
   const handleClearFilters = () => {
     setSearchTerm('');
     setStatusFilter('All');
     setCategoryFilter('All Categories');
+    if (onSetActiveHubFilter) {
+      onSetActiveHubFilter('All');
+    }
   };
 
   const availableCount = listings.filter((l) => l.status === 'Available').length;
   const requestedCount = listings.filter((l) => l.status === 'Requested').length;
+
+  const currentHubName =
+    activeHubFilter && activeHubFilter !== 'All'
+      ? hubs.find((h) => h.id === activeHubFilter)?.name || 'Filtered Hub'
+      : null;
 
   return (
     <section className="community-shelf" aria-labelledby="shelf-section-title">
@@ -82,6 +131,25 @@ export default function CommunityShelf({
         </button>
       </div>
 
+      {/* Hub Filter Notice if active */}
+      {currentHubName && (
+        <div className="active-hub-banner">
+          <div className="active-hub-banner__text">
+            <Building2 size={16} />
+            <span>
+              Showing donations associated with: <strong>{currentHubName}</strong>
+            </span>
+          </div>
+          <button
+            type="button"
+            className="btn-link text-small"
+            onClick={() => onSetActiveHubFilter('All')}
+          >
+            Show All Hubs
+          </button>
+        </div>
+      )}
+
       {/* Search and Filters Toolbar */}
       <div className="shelf-toolbar">
         {/* Search Input */}
@@ -90,7 +158,7 @@ export default function CommunityShelf({
           <input
             type="text"
             className="search-bar__input"
-            placeholder="Search by supply name, category, or pickup hub..."
+            placeholder="Search by supply name, category, pickup hub, or condition..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             aria-label="Search medical supplies"
@@ -159,6 +227,40 @@ export default function CommunityShelf({
               ))}
             </select>
           </div>
+
+          {/* Community Hub Dropdown */}
+          <div className="category-select-wrapper">
+            <Building2 size={15} className="category-select-icon" />
+            <select
+              className="category-select"
+              value={activeHubFilter || 'All'}
+              onChange={(e) => onSetActiveHubFilter(e.target.value)}
+              aria-label="Filter by community hub"
+            >
+              <option value="All">All Hubs &amp; Drop-offs</option>
+              {hubs.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Sort Dropdown */}
+          <div className="category-select-wrapper">
+            <ArrowUpDown size={15} className="category-select-icon" />
+            <select
+              className="category-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              aria-label="Sort listings"
+            >
+              <option value="newest">Sort: Newest Added</option>
+              <option value="oldest">Sort: Oldest Added</option>
+              <option value="expiry">Sort: Expiry (Soonest)</option>
+              <option value="name">Sort: Name (A-Z)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -166,7 +268,7 @@ export default function CommunityShelf({
       <div className="shelf-meta-bar">
         <span className="results-counter">
           Showing <strong>{filteredListings.length}</strong> of{' '}
-          <strong>{listings.length}</strong> items
+          <strong>{listings.length}</strong> supplies
           {hasActiveFilters && ' (filtered)'}
         </span>
         {hasActiveFilters && (
@@ -183,13 +285,18 @@ export default function CommunityShelf({
       {/* Listings Grid or Empty State */}
       {filteredListings.length > 0 ? (
         <div className="listings-grid">
-          {filteredListings.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              onRequestToggle={onRequestToggle}
-            />
-          ))}
+          {filteredListings.map((listing) => {
+            const hub = hubs.find((h) => h.id === listing.hubId);
+            return (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                hub={hub}
+                onRequestToggle={onRequestToggle}
+                onOpenDetail={onOpenDetail}
+              />
+            );
+          })}
         </div>
       ) : listings.length === 0 ? (
         <div className="empty-state">
@@ -216,7 +323,7 @@ export default function CommunityShelf({
           </div>
           <h3 className="empty-state__title">No matching supplies found</h3>
           <p className="empty-state__desc">
-            No community items match your current search &ldquo;{searchTerm}&rdquo; or selected filter criteria. Try adjusting your keywords or clearing the filter.
+            No community items match your current criteria. Try adjusting your search keywords, clearing selected category/hub filters, or resetting filters.
           </p>
           <div className="empty-state__actions">
             <button
@@ -224,7 +331,7 @@ export default function CommunityShelf({
               className="btn btn--outline"
               onClick={handleClearFilters}
             >
-              Reset Search & Filters
+              Reset Search &amp; Filters
             </button>
             <button
               type="button"
